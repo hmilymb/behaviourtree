@@ -578,7 +578,7 @@ end
 -- 当然，并行节点还是会将所有节点都执行一遍。
 oo.class("ParallelNodeAny","ParallelNode")
 function ParallelNodeAny:__init(children)
-	ParallelNode.__init(self,children)
+	ParallelNode.__init(self,children) --20220914应该用SelectorNode，且本文中的ParallelNode有误。
 	self.stoponanycomplete = true	-- 只要子节点有一个是success状态，则并行节点状态也为success状态
 	self._kind = "ParallelNodeAny"
 end
@@ -726,6 +726,7 @@ end
 ------------------------------------- 优先级节点 -------------------------------------
 -- 优先级节点（等价于：优先选择节点）
 -- 顺序执行子节点，如果子节点返回成功或运行中，记录该子节点，并将其他子节点重置
+-- hjj 20220914 执行到上一次的结果，如果没有上一次则重新找到一个成功或者running的节点
 oo.class("PriorityNode","BehaviourNode")
 function PriorityNode:__init(children,period)
 	BehaviourNode.__init(self,children)
