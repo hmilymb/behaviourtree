@@ -473,6 +473,23 @@ end
 ps:这里的实现的其实是Parallel Sequence Node，如果子节点failed,则返回。
 并行节点可以设置退出条件，参考：
 http://www.cnblogs.com/hammerc/p/5044815.html
+
+hjj -----------------------------------------------------
+不同于选择和顺序节点依次执行每个节点，并行节点是“同时”执行所有的节点，然后根据所有节点的返回值判断最终返回的结果。
+
+这里的“同时”会迷惑住不少人，实际上，行为树是运行在单一线程上的，并不会在并行节点上开多个线程来进行真正的同时执行，那么“同时”的含义是什么？
+
+我们知道选择或顺序节点会依次执行所有的子节点，当子节点返回“成功”或“失败”后就会停止后续节点的执行，而并行节点也会依次执行所有的子节点，无论子节点返回“成功”或“失败”都会继续运行后续节点，保证所有子节点都得到运行后在根据每个子节点的返回值来确定最终的返回结果。
+
+并行节点一般可以设定退出该节点的条件，比如：
+
+当全部节点都返回成功时退出；
+当某一个节点返回成功时退出；
+当全部节点都返回成功或失败时退出；
+当某一个节点返回成功或失败时退出；
+当全部节点都返回失败时退出；
+当某一个节点返回失败时退出；
+
 --]]
 oo.class("ParallelNode","BehaviourNode")
 function ParallelNode:__init(children)
@@ -488,9 +505,11 @@ function ParallelNode:visit()
 		if child:iskindof("ConditionNode") then --重启条件节点
 			child:reset()
 		end
-
+		
 		if child._status~=BT.SUCCESS then
 			child:visit()
+			
+			-- 20220914 这里有问题 先执行一遍，然后再判断正确如否然后退出，而不是没有执行就退出
 			if child._status == BT.FAILED then
 				self._status = BT.FAILED
 				return
